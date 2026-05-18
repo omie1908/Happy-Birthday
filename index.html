@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday!</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@700&family=Poppins:wght@400;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #050505;
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Full screen containers */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1s ease-in-out;
+            z-index: 10;
+        }
+
+        .screen.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Stage 1: Matrix & Neon Text */
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            opacity: 0.4;
+        }
+
+        #text-overlay {
+            z-index: 5;
+            text-align: center;
+            font-family: 'Courier Prime', monospace;
+            font-size: 5rem;
+            color: #ff80bf;
+            text-shadow: 0 0 10px #ff80bf, 0 0 20px #ff007f, 0 0 40px #ff007f;
+            letter-spacing: 5px;
+            line-height: 1.2;
+        }
+
+        #hbd-text {
+            display: none;
+            font-size: 3.5rem;
+            animation: fadeInScale 2s ease-out forwards;
+        }
+
+        /* Stage 2: Cute aesthetic image & Button */
+        .cute-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .cute-image {
+            width: 80%;
+            max-width: 300px;
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(255, 128, 191, 0.4);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* Buttons */
+        .aesthetic-btn {
+            background: rgba(255, 128, 191, 0.1);
+            border: 2px solid #ff80bf;
+            color: #ff80bf;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 30px;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(255, 128, 191, 0.2);
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .aesthetic-btn:hover {
+            background: #ff80bf;
+            color: #fff;
+            box-shadow: 0 0 25px rgba(255, 128, 191, 0.6);
+            transform: translateY(-3px);
+        }
+
+        /* Video Stages */
+        video {
+            width: 100%;
+            max-width: 400px;
+            aspect-ratio: 9/16;
+            background: #000;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(255, 128, 191, 0.3);
+            object-fit: cover;
+        }
+
+        #btn-lets-celebrate {
+            display: none; /* Hidden until video ends */
+            margin-top: 20px;
+        }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+
+        @keyframes fadeInScale {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="stage1" class="screen active">
+        <canvas id="matrix"></canvas>
+        <div id="text-overlay">
+            <div id="countdown">3</div>
+            <div id="hbd-text">HAPPY<br>BIRTHDAY<br>TO<br>YOU</div>
+        </div>
+    </div>
+
+    <div id="stage2" class="screen">
+        <div class="cute-container">
+            <img class="cute-image" src="https://media.tenor.com/PZcI3o8pM2cAAAAj/peach-cat.gif" alt="Cute Birthday Cat">
+            <button id="btn-lets-go" class="aesthetic-btn">Let's Go ✨</button>
+        </div>
+    </div>
+
+    <div id="stage3" class="screen">
+        <video id="video1" playsinline>
+            <source src="video1.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <button id="btn-lets-celebrate" class="aesthetic-btn">Let's Celebrate 🎉</button>
+    </div>
+
+    <div id="stage4" class="screen">
+        <video id="video2" playsinline loop>
+            <source src="video2.mp4" type="video/mp4">
+        </video>
+    </div>
+
+    <script>
+        // --- MATRIX RAIN EFFECT ---
+        const canvas = document.getElementById('matrix');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*';
+        const fontSize = 16;
+        const columns = canvas.width / fontSize;
+        const drops = Array.from({ length: columns }).fill(1);
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(5, 5, 5, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Pinkish aesthetic matrix text
+            ctx.fillStyle = 'rgba(255, 128, 191, 0.5)'; 
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = letters.charAt(Math.floor(Math.random() * letters.length));
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 50);
+
+        // --- SEQUENCE & TIMING LOGIC ---
+        
+        // 1. Countdown Logic
+        setTimeout(() => document.getElementById('countdown').innerText = '2', 1000);
+        setTimeout(() => document.getElementById('countdown').innerText = '1', 2000);
+        
+        // 2. Show HAPPY BIRTHDAY text
+        setTimeout(() => {
+            document.getElementById('countdown').style.display = 'none';
+            document.getElementById('hbd-text').style.display = 'block';
+        }, 3000);
+
+        // 3. Transition to Stage 2 (Cute Image + Let's Go)
+        setTimeout(() => {
+            document.getElementById('stage1').classList.remove('active');
+            document.getElementById('stage2').classList.add('active');
+        }, 7000);
+
+        // 4. Click "Let's Go" -> Play First Video
+        document.getElementById('btn-lets-go').addEventListener('click', () => {
+            document.getElementById('stage2').classList.remove('active');
+            document.getElementById('stage3').classList.add('active');
+            
+            let vid1 = document.getElementById('video1');
+            vid1.play().catch(e => console.log("Autoplay prevented. Please interact with document."));
+        });
+
+        // 5. When 21-second video ends -> Show "Let's Celebrate"
+        document.getElementById('video1').addEventListener('ended', () => {
+            document.getElementById('btn-lets-celebrate').style.display = 'block';
+        });
+
+        // Fallback: If video metadata is weird, force button to show after 21.5 seconds of playing
+        document.getElementById('video1').addEventListener('play', () => {
+            setTimeout(() => {
+                document.getElementById('btn-lets-celebrate').style.display = 'block';
+            }, 21500);
+        });
+
+        // 6. Click "Let's Celebrate" -> Play Final Video
+        document.getElementById('btn-lets-celebrate').addEventListener('click', () => {
+            document.getElementById('stage3').classList.remove('active');
+            document.getElementById('stage4').classList.add('active');
+            
+            document.getElementById('video2').play();
+        });
+
+        // Handle window resize for matrix canvas
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>
